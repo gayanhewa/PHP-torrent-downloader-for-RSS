@@ -1,4 +1,6 @@
 <?php
+	define('FILE_SHOWS', dirname(__FILE__) . '/shows.txt');
+
 	// Path to download torrrent files to
 	define('AUTOTORRENTS_PATH',"");
 	// RSS Feed of torrents (based on torrentleech.org)
@@ -7,40 +9,31 @@
 	$exclude = "(720p|brrip|1080p|dvdrip|hebsub|repack|dvdr)";
 	// File to keep history of downloaded torrrents
 	$historyFile = AUTOTORRENTS_PATH."history.txt";
-	$shows = array(
-		'dexter',
-		'dirty jobs',
-		'american dad',
-		'walking dead',
-		'chuck',
-		'lie to me',
-		'the event',
-		'glee',
-		'no ordinary family',
-		'stargate universe',
-		'psych',
-		'community',
-		'30 rock',
-		'fringe',
-		'the office',
-		'outsourced',
-		'burn notice',
-		"always sunny in philadelphia",
-		'smallville',
-		'how i met your mother',
-		'two and a half men',
-		'eureka',
-		'warehouse 13',
-		'modern family',
-		'the big bang theory',
-		'family guy',
-		'robot chicken',
-		'entourage',
-		'caprica',
-		'v 2009'
-	);
-	
-	$shows = "(".implode("|",$shows).")";
+
+	/**
+	 * Get the list of shows to download
+	 *
+	 * @return string
+	 */
+	function getShows() {
+		$result = '';
+
+		if (is_file(FILE_SHOWS) && file_exists(FILE_SHOWS) && is_readable(FILE_SHOWS)) {
+			$content = file_get_contents(FILE_SHOWS);
+			$content = preg_replace('/^\s*$/', '', $content);  // ignore empty lines
+			$content = preg_replace('/^#.*$/', '', $content);  // ignore commented lines (starting with #)
+			if (!empty($content)) {
+				$content = preg_replace("/[\r\n]/", '|', $content);	
+				$content = preg_replace('/\|+/', '|', $content);  // get rid of multiple separators
+				$content = preg_replace('/\|$/', '', $content);    // get rid of the trailing separator
+				$result = '(' . $content . ')';
+			}
+		}
+
+		return $result;
+	}
+
+	$shows = getShows();
 
 	$downloadList = array();
 
