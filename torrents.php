@@ -173,7 +173,6 @@ function downloadTorrent($url, $config){
 		$fileName = $fileFolder . $fileName;
 	}
 
-	echo "Downloading: ". $fileName . "\n";
 	$ch = curl_init($url);
 	if ($ch) {
 		curl_setopt($ch, CURLOPT_TIMEOUT, 1000);
@@ -250,6 +249,26 @@ function processFeeds($feeds, $config) {
 	return $result;
 }
 
+/**
+ * Print report
+ *
+ * @param array $stats Array with data
+ */
+function printReport($stats) {
+	if (!empty($stats)) {
+		print "Downloads report\n";
+		print "================\n";
+		foreach ($stats as $url => $files) {
+			print $url . "\n";
+			sort($files);
+			foreach ($files as $file) {
+				print "\t$file\n";
+			}
+			print "\n";
+		}
+	}
+}
+
 $config = getConfig(DEFAULT_CONFIG);
 
 if (empty($config)) {
@@ -257,8 +276,7 @@ if (empty($config)) {
 }
 
 $feeds = getFeeds($config);
-$result = processFeeds($feeds, $config);
-print_r($result);
-
+$stats = processFeeds($feeds, $config);
+printReport($stats);
 
 ?>
