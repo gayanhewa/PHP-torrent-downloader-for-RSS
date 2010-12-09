@@ -53,7 +53,12 @@ function getExcludes($config) {
 	return $result;
 }
 
-
+/**
+ * Get the list of feeds to process
+ *
+ * @param array $config Configuration array
+ * @return array
+ */
 function getFeeds($config) {
 	$result = array();
 
@@ -64,23 +69,43 @@ function getFeeds($config) {
 	return $result;
 }
 
-function downloadFeed($url) {
+/**
+ * Get content of specified URL
+ *
+ * @param string $url URL to fetch
+ * @return string
+ */
+function getUrlContent($url) {
+	$result = '';
+
 	$ch = curl_init();
-	curl_setopt($ch, CURLOPT_TIMEOUT, 1000);
-	curl_setopt($ch, CURLOPT_URL, $url);
-	curl_setopt($ch, CURLOPT_HEADER, 0);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	$result = curl_exec($ch);
-	curl_close($ch);
+	if ($ch) {
+		curl_setopt($ch, CURLOPT_TIMEOUT, 1000);
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_HEADER, 0);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		$result = curl_exec($ch);
+		curl_close($ch);
+	}
 
 	return $result;	
 }	
 
+/**
+ * Find URLs and titles of items in a given feed
+ *
+ * Since there are several ways a feed can provide URL
+ * to the item, we'll look for 'link' attribute first.
+ * If it wasn't found, we'll settle for 'guid'.
+ *
+ * @param string $url URL of the feed
+ * @return array Associative array: URL=>Title
+ */
 function getFeedItems($url) {
 	$result = array();
 
 	libxml_use_internal_errors(true);
-	$xml = simplexml_load_string(downloadFeed($url));
+	$xml = simplexml_load_string(getUrlContent($url));
 	if ($xml) {
 		foreach ($xml->channel->item as $item) {
 			$link = ($item->link) ? $item->link : $item->guid;
@@ -91,6 +116,14 @@ function getFeedItems($url) {
 	return $result;
 }
 
+/**
+ * Get only items of interest from all available feed items
+ *
+ * @param array $feedItems Associative array URL=>Title of items in the feed
+ * @param string $shows Pattern to look for in the titles
+ * @param string $exclude Pattern to ignore in the titles
+ * @return array
+ */
 function cleanFeedItems($feedItems, $shows, $exclude) {
 	$result = array();
 
@@ -114,7 +147,16 @@ function cleanFeedItems($feedItems, $shows, $exclude) {
 	return $result;
 }
 
+/**
+ * Download torrent file
+ *
+ * @param string $url URL of the file to download
+ * @param array $config Configuration array
+ * @return boolean True on success, false otherwise
+ */
 function downloadTorrent($url, $config){
+	$result = false;
+
 	$fileName = basename($url);
 	$fileExtension = $config['paths']['torrents_extension'];
 	$fileFolder = $config['paths']['torrents_folder'];
@@ -133,15 +175,25 @@ function downloadTorrent($url, $config){
 
 	echo "Downloading: ". $fileName . "\n";
 	$ch = curl_init($url);
-	curl_setopt($ch, CURLOPT_TIMEOUT, 1000);
-	$fp = fopen($fileName, 'w+');
-	curl_setopt($ch, CURLOPT_FILE, $fp);
-	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-	curl_exec($ch);
-	curl_close($ch);
-	fclose($fp);
+	if ($ch) {
+		curl_setopt($ch, CURLOPT_TIMEOUT, 1000);
+		$fp = fopen($fileName, 'w+');
+		curl_setopt($ch, CURLOPT_FILE, $fp);
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+		$result = curl_exec($ch);
+		curl_close($ch);
+		fclose($fp);
+	}
+
+	return $result;
 }
 
+/**
+ * Get history of downloaded files
+ *
+ * @param array $config Configuration array
+ * @return array
+ */
 function getHistory($config) {
 	$result = array();
 
@@ -153,12 +205,26 @@ function getHistory($config) {
 	return $result;
 }
 
-function saveHistory($config, $history) {
+/**
+ * Update history of downloaded files
+ *
+ * @param array $history History
+ * @param array $config Configuration array
+ * @return numeric Number of bytes written to file
+ */
+function saveHistory($history, $config) {
 	$historyFile = $config['paths']['history'];
 	return file_put_contents($historyFile, implode("\n", $history));
 }
 
 
+/**
+ * Process feeds
+ *
+ * @param array $feeds List of feeds to process
+ * @param array $config Configuration array
+ * @return array Processing stats
+ */
 function processFeeds($feeds, $config) {
 	$result = array();
 
@@ -178,7 +244,7 @@ function processFeeds($feeds, $config) {
 			}
 		}
 
-		saveHistory($config, $history);
+		saveHistory($history, $config);
 	}
 
 	return $result;
