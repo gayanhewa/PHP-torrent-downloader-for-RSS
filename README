@@ -1,0 +1,3 @@
+PHP torrent downloader for RSS is a script that helps you get torrents that you
+are interested in from one or more RSS feeds.  It supports include and exclude
+patterns, multiple feeds, and custom location of the downloaded .torrent files.
