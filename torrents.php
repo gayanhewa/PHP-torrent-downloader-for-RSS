@@ -1,4 +1,4 @@
-<?
+<?php
 	// Path to download torrrent files to
 	define('AUTOTORRENTS_PATH',"");
 	// RSS Feed of torrents (based on torrentleech.org)
