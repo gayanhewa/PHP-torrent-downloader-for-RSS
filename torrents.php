@@ -269,7 +269,8 @@ function printReport($stats) {
 	}
 }
 
-$config = getConfig(DEFAULT_CONFIG);
+// If no config specified, use the default one
+$config = empty($argv[1]) ? getConfig(DEFAULT_CONFIG) : getConfig($argv[1]);
 
 if (empty($config)) {
 	die("Empty config. Nothing to do. Work on your " . DEFAULT_CONFIG);
